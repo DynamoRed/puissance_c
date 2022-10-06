@@ -99,6 +99,35 @@ int _get_players_names(Board *board){
 	return 1;
 }
 
+int is_moving(int c) {
+    return c == 77 || c == 75;
+}
+
+void _move_cursor(Board *board, int new_pos) {
+    if(new_pos == 77 && board->selected_column + 1 < board->columns) {
+        board->selected_column += 1;
+    } else if(new_pos == 75 && board->selected_column - 1 >= 0) {
+        board->selected_column -= 1;
+    }
+}
+
+int _start_game(Board *board) {
+    int event;
+
+    event = getch();
+    if(event == 80) return 0;
+
+    if(is_moving(event)) {
+        clear_console();
+        _move_cursor(board, event);
+        display_board(board);
+    }
+
+
+    return 1;
+}
+
+
 int main(int argc, char *argv[]){
     _setmode(_fileno(stdout), 0x00020000);
 
@@ -113,12 +142,13 @@ int main(int argc, char *argv[]){
 
     Board *board = _generate_board(config.rows, config.columns, config.player_count);
 
-	if(_get_players_names(board)){
-		wprintf(L"LAUNCH GAME");
-        while (start_game) {
+    if(_get_players_names(board)){
+        clear_console();
+        display_board(board);
+        while (1) {
             start_game = _start_game(board);
         }
-	}
+    }
 	else {
 		wprintf(L"%sAn error occured!", CONSOLE_COLORS[1]);
 		return EXIT_FAILURE;

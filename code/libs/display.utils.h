@@ -25,3 +25,5 @@ void display_board(Board *board) {
         wprintf(L"\n");
     }
 }
+
+void clear
