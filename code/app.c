@@ -1,3 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <io.h>
+#include <math.h>
+#include <string.h>
+#include "libs/game.utils.h"
+
 /*H**********************************************************************
 * FILENAME: app.c
 *
@@ -5,7 +12,7 @@
 *       Main file of our app
 *
 * PUBLIC FUNCTIONS :
-*       int my_func(...)
+*       int main(...)
 *
 * NOTES :
 *       ...command to compile
@@ -15,3 +22,8 @@
 * START DATE : 06/10/2022
 *
 *H***********************************************************************/
+
+int main(int argc, char *argv[]){
+
+	return EXIT_SUCCESS;
+}
