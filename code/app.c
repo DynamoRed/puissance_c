@@ -4,6 +4,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include "libs/game.utils.h"
+#include <conio.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 	#include <io.h>
@@ -48,7 +49,7 @@ Board *_generate_board(unsigned short rows, unsigned short columns, unsigned sho
 
 	Player *null_player = malloc(sizeof(Player));
 	null_player->name = NULL;
-	strcpy(null_player->color, CONSOLE_COLORS[4]);
+	wcscpy(null_player->color, CONSOLE_COLORS[4]);
 	null_player->id = -1;
 	null_player->placed_pawns = -1;
 
@@ -61,14 +62,39 @@ Board *_generate_board(unsigned short rows, unsigned short columns, unsigned sho
 	board->players[player_count] = null_player;
 	for(int i = 0; i < player_count; i++){
 		Player *new_player = calloc(1, sizeof(Player));
-		new_player->name = NULL;
-		strcpy(new_player->color, CONSOLE_COLORS[i]);
+		new_player->name = calloc(255, sizeof(wchar_t));
+		wcscpy(new_player->color, CONSOLE_COLORS[i]);
 		new_player->placed_pawns = 0;
 		new_player->id = i;
 		board->players[i] = new_player;
 	}
 
 	return board;
+}
+
+int _get_players_names(Board *board){
+	wprintf(L"\e[1;1H\e[2J");
+	wprintf(L"%s---=== PUISSANCE C ===---%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+	wchar_t *first = L"first";
+	wchar_t *next = L"next";
+	for(int i = 0; i < board->player_count; i++){
+		wchar_t *name = calloc(255, sizeof(wchar_t));
+
+		int len = 0;
+		do {
+			wprintf(L"\n\n\x2192 Enter %s player name: ", i == 0 ? first : next);
+			wscanf(L"%s", name);
+			len = wcslen(name);
+			if(len < 2) wprintf(L"\n%sIncorrect name! Retry...%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+		} while(len < 2);
+
+		wcscpy(board->players[i]->name, name);
+		wprintf(L"\e[1;1H\e[2J");
+		fflush(stdin);
+		free(name);
+		wprintf(L"Welcome onboard %s%s %s!", board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[5]);
+	}
+	return 1;
 }
 
 int main(int argc, char *argv[]){
@@ -83,6 +109,13 @@ int main(int argc, char *argv[]){
 	};
 
 	Board *board = _generate_board(config.rows, config.columns, config.player_count);
+
+	if(_get_players_names(board)) /*LAUNCH GAME HERE*/;
+	else {
+		wprintf(L"\e[1;1H\e[2J");
+		wprintf(L"\n%sAn error occured!");
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }
