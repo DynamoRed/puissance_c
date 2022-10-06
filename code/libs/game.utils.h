@@ -14,7 +14,7 @@
 
 // RED / GREEN / BLUE / VIOLET / BLACK / WHITE
 static wchar_t *CONSOLE_COLORS[] = {L"\033[0;31m", L"\033[0;32m", L"\033[0;34m", L"\033[0;35m", L"\033[0;30m", L"\033[0;37m"};
-// 0: ♕ - 1: ⦿ - 2: ♟ - 3:→
+// 0: '♕' - 1: '⦿' - 2: '♟' - 3: '→'
 static wchar_t *SPECIALS_CHARS[] = {L"\x2655", L"\x29BF", L"\x265F", L"\x2192"};
 
 typedef struct {
