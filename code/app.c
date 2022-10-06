@@ -56,19 +56,21 @@ Board *_generate_board(unsigned short rows, unsigned short columns, unsigned sho
 
     board->player_count = player_count;
     board->players = calloc(player_count+1, sizeof(Player));
-    board->turn_of = 0;
+
+    for(int i = 0; i < player_count; i++){
+        Player *new_player = calloc(1, sizeof(Player));
+        new_player->name = calloc(255, sizeof(wchar_t));
+        wcscpy(new_player->color, CONSOLE_COLORS[i]);
+        new_player->placed_pawns = 0;
+        new_player->id = i;
+        board->players[i] = new_player;
+    }
+
+    board->turn_of = board->players[0];
     board->winner = calloc(1, sizeof(Player));
     board->winner = null_player;
 
 	board->players[player_count] = null_player;
-	for(int i = 0; i < player_count; i++){
-		Player *new_player = calloc(1, sizeof(Player));
-		new_player->name = calloc(255, sizeof(wchar_t));
-		wcscpy(new_player->color, CONSOLE_COLORS[i]);
-		new_player->placed_pawns = 0;
-		new_player->id = i;
-		board->players[i] = new_player;
-	}
 
     return board;
 }
@@ -103,11 +105,44 @@ int is_moving(int c) {
     return c == 77 || c == 75;
 }
 
+int is_put_pawn(int c) {
+    return c == 13;
+}
+
+
 void _move_cursor(Board *board, int new_pos) {
     if(new_pos == 77 && board->selected_column + 1 < board->columns) {
         board->selected_column += 1;
     } else if(new_pos == 75 && board->selected_column - 1 >= 0) {
         board->selected_column -= 1;
+    }
+}
+
+void _put_pawn(Board *board) {
+    int selected_column = board->selected_column;
+    int index = 0;
+
+    while (board->map[index][selected_column] == -1) {
+        if(index == board->rows - 1) {
+            break;
+        }
+        index++;
+    }
+
+    if(index == 0) {
+        return;
+    }
+
+    if(index == board->rows - 1 && board->map[index][selected_column] == -1) {
+        index++;
+    }
+
+    board->map[index - 1][selected_column] = board->turn_of->id;
+
+    if(board->turn_of->id + 1 >= board->player_count) {
+        board->turn_of = board->players[0];
+    } else {
+        board->turn_of = board->players[board->turn_of->id + 1];
     }
 }
 
@@ -120,6 +155,12 @@ int _start_game(Board *board) {
     if(is_moving(event)) {
         clear_console();
         _move_cursor(board, event);
+        display_board(board);
+    }
+
+    if(is_put_pawn(event)) {
+        clear_console();
+        _put_pawn(board);
         display_board(board);
     }
 
@@ -136,16 +177,21 @@ int main(int argc, char *argv[]){
             .rows = 6,
             .columns = 7,
             .align_to_win = 4,
-            .player_count = 2
+            .player_count = 3
     };
     int start_game = 1;
 
     Board *board = _generate_board(config.rows, config.columns, config.player_count);
 
+
+    //
+    //board->map[0][5] = 1;
+    //board->map[4][0] = 1;
+
     if(_get_players_names(board)){
         clear_console();
         display_board(board);
-        while (1) {
+        while (start_game) {
             start_game = _start_game(board);
         }
     }
