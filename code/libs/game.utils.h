@@ -18,26 +18,27 @@ static wchar_t *CONSOLE_COLORS[] = {L"\033[0;31m", L"\033[0;32m", L"\033[0;34m",
 static wchar_t *SPECIALS_CHARS[] = {L"\x2655", L"\x29BF", L"\x265F", L"\x2192"};
 
 typedef struct {
-	int rows;
-	int columns;
-	int align_to_win;
-	int player_count;
+	unsigned short rows;
+	unsigned short columns;
+	unsigned short align_to_win;
+	unsigned short player_count;
 } Config;
 
 typedef struct {
     wchar_t *name;
     wchar_t color[11];
-    int id;
-    int placed_pawns;
+    unsigned short id;
+    unsigned short placed_pawns;
 } Player;
 
 typedef struct {
-    int **map;
-    int rows;
-    int columns;
+    short **map;
+    unsigned short rows;
+    unsigned short columns;
     Player *turn_of;
     Player *winner;
-    int player_count;
+    unsigned short player_count;
     Player **players;
-    int selected_column;
+    unsigned short selected_column;
+	Config *config;
 } Board;
