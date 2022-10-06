@@ -1,9 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <io.h>
 #include <math.h>
 #include <string.h>
+#include <fcntl.h>
 #include "libs/game.utils.h"
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
+	#include <io.h>
+#elif __APPLE__
+	#include <sys/uio.h>
+#elif __linux__ || __unix__
+	#include <sys/io.h>
+#else
+	#error "Unknown compiler"
+#endif
+
 
 /*H**********************************************************************
 * FILENAME: app.c
@@ -24,6 +35,7 @@
 *H***********************************************************************/
 
 int main(int argc, char *argv[]){
+	_setmode(_fileno(stdout), 0x00020000);
 
 	return EXIT_SUCCESS;
 }
