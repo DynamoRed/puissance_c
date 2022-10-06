@@ -12,9 +12,20 @@
  *
  *H***********************************************************************/
 
+static char *CONSOLE_COLORS[] = {"\033[0;31m", "\033[0;32m", "\033[0;34m", "\033[0;35m", "\033[0;30m"};
+// 0: ♕ - 1: ⦿ - 2: ♟
+static wchar_t *SPECIALS_CHARS[] = {L"\x2655", L"\x29BF", L"\x265F"};
+
+typedef struct {
+	int rows;
+	int columns;
+	int align_to_win;
+	int player_count;
+} Config;
+
 typedef struct {
     char *name;
-    char *color;
+    char color[11];
     int id;
     int placed_pawns;
 } Player;
@@ -27,5 +38,5 @@ typedef struct {
     Player *winner;
     int player_count;
     Player **players;
-    int selected_columns;
+    int selected_column;
 } Board;
