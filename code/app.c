@@ -36,28 +36,28 @@
 *
 *H***********************************************************************/
 
-Board *_generate_board(unsigned short rows, unsigned short columns, unsigned short player_count){
+Board *_generate_board(unsigned short rows, unsigned short columns, unsigned short player_count) {
     Board *board = malloc(sizeof(Board));
 
     board->columns = columns;
     board->rows = rows;
     board->map = calloc(rows, sizeof(int *));
-    for(int i = 0; i < rows; i++){
+    for (int i = 0; i < rows; i++) {
         board->map[i] = calloc(columns, sizeof(int));
-        for(int y = 0; y < columns; y++) board->map[i][y] = -1;
+        for (int y = 0; y < columns; y++) board->map[i][y] = -1;
     }
     board->selected_column = 0;
 
-	Player *null_player = malloc(sizeof(Player));
-	null_player->name = NULL;
-	wcscpy(null_player->color, CONSOLE_COLORS[4]);
-	null_player->id = -1;
-	null_player->placed_pawns = -1;
+    Player *null_player = malloc(sizeof(Player));
+    null_player->name = NULL;
+    wcscpy(null_player->color, CONSOLE_COLORS[4]);
+    null_player->id = -1;
+    null_player->placed_pawns = -1;
 
     board->player_count = player_count;
-    board->players = calloc(player_count+1, sizeof(Player));
+    board->players = calloc(player_count + 1, sizeof(Player));
 
-    for(int i = 0; i < player_count; i++){
+    for (int i = 0; i < player_count; i++) {
         Player *new_player = calloc(1, sizeof(Player));
         new_player->name = calloc(255, sizeof(wchar_t));
         wcscpy(new_player->color, CONSOLE_COLORS[i]);
@@ -70,35 +70,35 @@ Board *_generate_board(unsigned short rows, unsigned short columns, unsigned sho
     board->winner = calloc(1, sizeof(Player));
     board->winner = null_player;
 
-	board->players[player_count] = null_player;
+    board->players[player_count] = null_player;
 
     return board;
 }
 
-int _get_players_names(Board *board){
-	wprintf(L"\e[1;1H\e[2J");
-	wprintf(L"%s---=== PUISSANCE C ===---%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
-	wchar_t *first = L"first";
-	wchar_t *next = L"next";
-	for(int i = 0; i < board->player_count; i++){
-		wchar_t *name = calloc(255, sizeof(wchar_t));
+int _get_players_names(Board *board) {
+    wprintf(L"\e[1;1H\e[2J");
+    wprintf(L"%s---=== PUISSANCE C ===---%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+    wchar_t *first = L"first";
+    wchar_t *next = L"next";
+    for (int i = 0; i < board->player_count; i++) {
+        wchar_t *name = calloc(255, sizeof(wchar_t));
 
-		int len = 0;
-		do {
-			wprintf(L"\n\n\x2192 Enter %s player name: ", i == 0 ? first : next);
-			wscanf(L"%s", name);
-			len = wcslen(name);
-			if(len < 2) wprintf(L"\n%sIncorrect name! Retry...%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
-		} while(len < 2);
+        int len = 0;
+        do {
+            wprintf(L"\n\n\x2192 Enter %s player name: ", i == 0 ? first : next);
+            wscanf(L"%s", name);
+            len = wcslen(name);
+            if (len < 2) wprintf(L"\n%sIncorrect name! Retry...%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+        } while (len < 2);
 
-		wcscpy(board->players[i]->name, name);
-		wprintf(L"\e[1;1H\e[2J");
-		fflush(stdin);
-		free(name);
-		wprintf(L"Welcome onboard %s%s %s!", board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[5]);
-	}
-	wprintf(L"\e[1;1H\e[2J");
-	return 1;
+        wcscpy(board->players[i]->name, name);
+        wprintf(L"\e[1;1H\e[2J");
+        fflush(stdin);
+        free(name);
+        wprintf(L"Welcome onboard %s%s %s!", board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[5]);
+    }
+    wprintf(L"\e[1;1H\e[2J");
+    return 1;
 }
 
 int is_moving(int c) {
@@ -109,11 +109,67 @@ int is_put_pawn(int c) {
     return c == 13;
 }
 
+int _verif_winner_y(Board *board, int columns) {
+    for (int y = 0; y < board->rows; y++) {
+        if (board->map[y][columns] != -1) {
+            int player = board->map[y][columns];
+            int count = 0;
+
+            while (board->map[y + 1][columns] == player && y + 1 < board->rows) {
+                if (count == 4) {
+                    return 1;
+                }
+
+                count++;
+            }
+
+        }
+    }
+
+    return 0;
+}
+
+int _verif_winner_x(Board *board, int rows) {
+    for (int x = 0; x < board->columns; x++) {
+        if (board->map[rows][x] != -1) {
+            int player = board->map[rows][x];
+            int count = 0;
+
+            while (board->map[rows][x + 1] == player && x + 1 < board->columns) {
+                if (count == 4) {
+                    return 1;
+                }
+
+                count++;
+            }
+
+        }
+    }
+
+    return 0;
+
+}
+
+int _verif_winner(Board *board) {
+    int index = 0;
+    for (int i = 0; i < board->rows; ++i) {
+        int value = board->rows[i][j];
+        for (int j = i + 1; j <= board->columns; ++j) {
+            if(value == board->rows[i][j]) {
+                index++;
+            }
+            if(index == board->align_to_win) {
+                return value;
+            }
+        }
+    }
+    return -1;
+}
 
 void _move_cursor(Board *board, int new_pos) {
-    if(new_pos == 77 && board->selected_column + 1 < board->columns) {
+    if (new_pos == 77 && board->selected_column + 1 < board->columns) {
         board->selected_column += 1;
-    } else if(new_pos == 75 && board->selected_column - 1 >= 0) {
+    } else if (new_pos == 75 && board->selected_column - 1 >= 0) {
         board->selected_column -= 1;
     }
 }
@@ -123,23 +179,23 @@ void _put_pawn(Board *board) {
     int index = 0;
 
     while (board->map[index][selected_column] == -1) {
-        if(index == board->rows - 1) {
+        if (index == board->rows - 1) {
             break;
         }
         index++;
     }
 
-    if(index == 0) {
+    if (index == 0) {
         return;
     }
 
-    if(index == board->rows - 1 && board->map[index][selected_column] == -1) {
+    if (index == board->rows - 1 && board->map[index][selected_column] == -1) {
         index++;
     }
 
     board->map[index - 1][selected_column] = board->turn_of->id;
 
-    if(board->turn_of->id + 1 >= board->player_count) {
+    if (board->turn_of->id + 1 >= board->player_count) {
         board->turn_of = board->players[0];
     } else {
         board->turn_of = board->players[board->turn_of->id + 1];
@@ -150,15 +206,18 @@ int _start_game(Board *board) {
     int event;
 
     event = getch();
-    if(event == 80) return 0;
+    if (event == 80) return 0;
 
-    if(is_moving(event)) {
+    if (is_moving(event)) {
         clear_console();
         _move_cursor(board, event);
+        if(_verif_winner_x(board, 0) || _verif_winner_x(board, 1)) {
+            return 0;
+        }
         display_board(board);
     }
 
-    if(is_put_pawn(event)) {
+    if (is_put_pawn(event)) {
         clear_console();
         _put_pawn(board);
         display_board(board);
@@ -169,7 +228,7 @@ int _start_game(Board *board) {
 }
 
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
     _setmode(_fileno(stdout), 0x00020000);
 
     // INIT CONFIG
@@ -177,7 +236,7 @@ int main(int argc, char *argv[]){
             .rows = 6,
             .columns = 7,
             .align_to_win = 4,
-            .player_count = 3
+            .player_count = 2
     };
     int start_game = 1;
 
@@ -188,17 +247,16 @@ int main(int argc, char *argv[]){
     //board->map[0][5] = 1;
     //board->map[4][0] = 1;
 
-    if(_get_players_names(board)){
+    if (_get_players_names(board)) {
         clear_console();
         display_board(board);
         while (start_game) {
             start_game = _start_game(board);
         }
+    } else {
+        wprintf(L"%sAn error occured!", CONSOLE_COLORS[1]);
+        return EXIT_FAILURE;
     }
-	else {
-		wprintf(L"%sAn error occured!", CONSOLE_COLORS[1]);
-		return EXIT_FAILURE;
-	}
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
