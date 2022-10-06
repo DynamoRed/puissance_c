@@ -136,7 +136,7 @@ int main(int argc, char *argv[]){
             .rows = 6,
             .columns = 7,
             .align_to_win = 4,
-            .player_count = 4
+            .player_count = 2
     };
     int start_game = 1;
 
