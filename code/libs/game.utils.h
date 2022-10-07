@@ -71,7 +71,7 @@ Board *generate_board(Config *config){
 
 	Player *null_player = malloc(sizeof(Player));
 	null_player->name = NULL;
-	wcscpy(null_player->color, CONSOLE_COLORS[4]);
+	wcscpy(null_player->color, CONSOLE_COLORS[1]);
 	null_player->id = -1;
 	null_player->placed_pawns = -1;
 
@@ -81,7 +81,7 @@ Board *generate_board(Config *config){
     for(short i = 0; i < config->player_count; i++){
         Player *new_player = calloc(1, sizeof(Player));
         new_player->name = calloc(255, sizeof(wchar_t));
-        wcscpy(new_player->color, CONSOLE_COLORS[i]);
+        wcscpy(new_player->color, CONSOLE_COLORS[2+i]);
         new_player->placed_pawns = 0;
         new_player->id = i;
         board->players[i] = new_player;
@@ -90,6 +90,7 @@ Board *generate_board(Config *config){
     board->turn_of = board->players[0];
     board->winner = calloc(1, sizeof(Player));
     board->winner = null_player;
+    board->null_match = false;
 
 	board->players[config->player_count] = null_player;
 
@@ -192,7 +193,17 @@ bool _verify_winner(Board *board) {
 		}
 	}
 
-    return false;
+	int last_null = 0;
+
+	for (int i = 0; i < board->rows; i++){
+		for (int y = 0; y < board->columns; y++){
+			if(board->map[i][y] == -1) last_null++;
+		}
+	}
+
+	board->null_match = !last_null;
+
+    return board->null_match;
 }
 
 bool run_game(Board *board){

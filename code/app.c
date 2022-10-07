@@ -54,15 +54,23 @@ int main(int argc, char *argv[]){
 
     _setmode(_fileno(stdout), 0x00020000);
 
-	if(!get_config(config, "")){
-		config->align_to_win = 4;
-		config->columns = 7;
-		config->rows = 6;
-		config->player_count = 2;
+	if(!get_config(config, "app.config")){
+		wprintf(L"%sInvalid app.config file!%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
+		return EXIT_FAILURE;
 	}
 
 	if(config->rows < 2 || config->columns < 2 || config->align_to_win < 2 || config->player_count < 2){
-		wprintf(L"%sInvalid configuration! (Every field must be at least equal to 2)%s", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+		wprintf(L"%sInvalid configuration! (Every field must be at least equal to 2)%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
+		return EXIT_FAILURE;
+	}
+
+	if(config->player_count > 5){
+		wprintf(L"%sYou can play with up to 5 players maximum!%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
+		return EXIT_FAILURE;
+	}
+
+	if(config->rows < config->align_to_win || config->columns < config->align_to_win){
+		wprintf(L"%sInvalid rows or columns values! Your rows and columns must be at least equal to ALIGN_TO_WIN%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
 		return EXIT_FAILURE;
 	}
 
@@ -72,7 +80,7 @@ int main(int argc, char *argv[]){
         display_board(board);
         while(game_run) game_run = run_game(board);
     } else {
-		wprintf(L"%sAn error occured!%s", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+		wprintf(L"%sAn error occured!%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
 		return EXIT_FAILURE;
 	}
 
@@ -81,7 +89,7 @@ int main(int argc, char *argv[]){
 
 bool _get_players_names(Board *board){
 	clear_console();
-	wprintf(L"%s---=== PUISSANCE C ===---%s", CONSOLE_COLORS[6], CONSOLE_COLORS[5]);
+	wprintf(L"%s---=== PUISSANCE C ===---%s", CONSOLE_COLORS[4], CONSOLE_COLORS[0]);
 	wchar_t *first = L"the first";
 	wchar_t *next = L"next";
 	for(short i = 0; i < board->player_count; i++){
@@ -94,12 +102,12 @@ bool _get_players_names(Board *board){
 			wscanf(L"%s", name);
 			int len = wcslen(name);
 			if(len < 2){
-				wprintf(L"\n%sIncorrect name! Retry...%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+				wprintf(L"\n%sIncorrect name! Retry...%s\n", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
 				correct = false;
 			}
 			for(short y = 0; y < board->player_count; y++){
 				if(wcscmp(board->players[y]->name, name) == 0){
-					wprintf(L"\n%sThis name is already taken! Retry...%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+					wprintf(L"\n%sThis name is already taken! Retry...%s\n", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
 					correct = false;
 					break;
 				}
@@ -110,7 +118,7 @@ bool _get_players_names(Board *board){
 		clear_console();
 		fflush(stdin);
 		free(name);
-		wprintf(L"%sWelcome onboard %s%s %s!", CONSOLE_COLORS[5], board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[5]);
+		wprintf(L"%sWelcome onboard %s%s %s!", CONSOLE_COLORS[0], board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[0]);
 	}
 
 	clear_console();

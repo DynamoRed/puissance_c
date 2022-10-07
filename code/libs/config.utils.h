@@ -14,20 +14,25 @@
 
 /*=====================================================*/
 
-int get_config(Config *config, char *configFile);
+bool get_config(Config *config, char *config_file);
 
 /*=====================================================*/
 
-int get_config(Config *config, char *configFile){
-	if(strlen(configFile) < strlen("app.config")) return 0;
+bool get_config(Config *config, char *config_file){
+	if(strlen(config_file) < strlen("app.config")) return false;
 
     char line[256];
-    int line_number = 0;
+    unsigned short line_number = 0;
     int i = 0, k = 0;
-    FILE *file = fopen(configFile, "r");
+    FILE *file = fopen(config_file, "r");
     char *key, *value;
 
-	if(file == NULL) return 0;
+	if(file == NULL){
+		fclose(file);
+		file = fopen(config_file, "w+");
+		fprintf(file, "ROWS=6\nCOLUMNS=7\nALIGN_TO_WIN=4\nPLAYER_COUNT=2\n");
+		rewind(file);
+	}
 
     while (fgets(line, 256, file) != NULL){
         line_number++;
@@ -54,17 +59,17 @@ int get_config(Config *config, char *configFile){
         i = 0;
         k = 0;
 
-        if (strcmp(key, "rows") == 0){
+        if (strcmp(key, "ROWS") == 0){
             config->rows = atoi(value);
-        } else if (strcmp(key, "columns") == 0){
+        } else if (strcmp(key, "COLUMNS") == 0){
             config->columns = atoi(value);
-        } else if (strcmp(key, "align_to_win") == 0){
+        } else if (strcmp(key, "ALIGN_TO_WIN") == 0){
             config->align_to_win = atoi(value);
-        } else if (strcmp(key, "player_win") == 0){
+        } else if (strcmp(key, "PLAYER_COUNT") == 0){
             config->player_count = atoi(value);
         }
     }
 
     fclose(file);
-	return 1;
+	return true;
 }
