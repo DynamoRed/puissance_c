@@ -14,30 +14,30 @@
 
 /*=====================================================*/
 
-int start_game(Board *board);
+bool start_game(Board *board);
 Board *generate_board(Config *config);
-int _move_cursor(Board *board, int move_to);
-int _put_pawn(Board *board);
+bool _move_cursor(Board *board, int move_to);
+bool _put_pawn(Board *board);
 
 /*=====================================================*/
 
-int _move_cursor(Board *board, int move_to){
-	if((move_to == 77 && board->selected_column +1 >= board->columns) || (move_to == 75 && board->selected_column-1 < 0)) return 0;
+bool _move_cursor(Board *board, int move_to){
+	if((move_to == 77 && board->selected_column +1 >= board->columns) || (move_to == 75 && board->selected_column-1 < 0)) return false;
 
     if(move_to == 77) board->selected_column += 1;
     else if(move_to == 75) board->selected_column -= 1;
 
-	return 1;
+	return true;
 }
 
-int _put_pawn(Board *board){
+bool _put_pawn(Board *board){
     int index = 0;
 
     while (board->map[index][board->selected_column] == -1) {
         if(index == board->rows - 1) break;
         index++;
     }
-    if(index == 0) return 0;
+    if(!index) return false;
 
     if(index == board->rows - 1 && board->map[index][board->selected_column] == -1) index++;
     board->map[index - 1][board->selected_column] = board->turn_of->id;
@@ -46,7 +46,7 @@ int _put_pawn(Board *board){
     else board->turn_of = board->players[board->turn_of->id + 1];
 
 	board->selected_column = 0;
-	return 1;
+	return true;
 }
 
 Board *generate_board(Config *config){
@@ -90,7 +90,7 @@ Board *generate_board(Config *config){
     return board;
 }
 
-int run_game(Board *board){
+bool run_game(Board *board){
     int event = getch();
 
 	switch(event){
@@ -104,8 +104,8 @@ int run_game(Board *board){
 			break;
 
 		case 27:
-			return 0;
+			return false;
 	}
 
-    return 1;
+    return true;
 }
