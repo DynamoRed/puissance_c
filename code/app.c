@@ -55,8 +55,10 @@ int main(int argc, char *argv[]){
     _setmode(_fileno(stdout), 0x00020000);
 
 	if(!get_config(config, "")){
-		wprintf(L"%sAn error occured when retrieving config file!%s", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
-		return EXIT_FAILURE;
+		config->align_to_win = 4;
+		config->columns = 7;
+		config->rows = 6;
+		config->player_count = 2;
 	}
 
 	if(config->rows < 2 || config->columns < 2 || config->align_to_win < 2 || config->player_count < 2){
@@ -88,7 +90,7 @@ bool _get_players_names(Board *board){
 		bool correct = false;
 		do {
 			correct = true;
-			wprintf(L"\n\n\x2192 Enter %s player name: ", i == 0 ? first : next);
+			wprintf(L"\n\n\x2192 Enter %s player name: %s", i == 0 ? first : next, board->players[i]->color);
 			wscanf(L"%s", name);
 			int len = wcslen(name);
 			if(len < 2){
@@ -108,7 +110,7 @@ bool _get_players_names(Board *board){
 		clear_console();
 		fflush(stdin);
 		free(name);
-		wprintf(L"Welcome onboard %s%s %s!", board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[5]);
+		wprintf(L"%sWelcome onboard %s%s %s!", CONSOLE_COLORS[5], board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[5]);
 	}
 
 	clear_console();

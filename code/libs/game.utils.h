@@ -18,9 +18,11 @@ bool start_game(Board *board);
 Board *generate_board(Config *config);
 bool _move_cursor(Board *board, int move_to);
 bool _put_pawn(Board *board);
+bool _is_out_of_bound(int y, int x, int rows, int cols);
 bool _verify_winner(Board *board);
 int _verif_winner_y(Board *board, int column);
 int _verif_winner_x(Board *board, int row);
+int _verif_winner_diag(Board *board, int row, int column);
 
 /*=====================================================*/
 
@@ -44,6 +46,7 @@ bool _put_pawn(Board *board){
 
     if(index == board->rows - 1 && board->map[index][board->selected_column] == -1) index++;
     board->map[index - 1][board->selected_column] = board->turn_of->id;
+	board->turn_of->placed_pawns++;
 
     if(board->turn_of->id + 1 >= board->player_count) board->turn_of = board->players[0];
     else board->turn_of = board->players[board->turn_of->id + 1];
@@ -100,7 +103,7 @@ int _verif_winner_y(Board *board, int column){
             int count = 1;
 
             while (y < board->rows && board->map[y][column] == player){
-                if(count == board->config->align_to_win) return player;
+                if(count >= board->config->align_to_win) return player;
 
                 count++;
                 y++;
@@ -117,7 +120,7 @@ int _verif_winner_x(Board *board, int row){
             int count = 1;
 
             while (x < board->columns && board->map[row][x] == player){
-                if(count == board->config->align_to_win) return player;
+                if(count >= board->config->align_to_win) return player;
 
                 count++;
                 x++;
@@ -127,20 +130,41 @@ int _verif_winner_x(Board *board, int row){
     return -1;
 }
 
+bool _is_out_of_bound(int y, int x, int rows, int cols){
+	return x >= cols || y >= rows;
+}
+
+int _verif_winner_diag(Board *board, int row_input, int column_input){
+	if (board->map[row_input][column_input] != -1){
+		int player = board->map[row_input][column_input];
+		int count = 1;
+		int row = row_input + 1, col = column_input + 1;
+
+		while(!_is_out_of_bound(row, col, board->rows, board->columns) && board->map[row][col] == player){
+			row += 1;
+			col += 1;
+			count += 1;
+
+			if(count >= board->config->align_to_win) return player;
+		}
+
+		count = 1;
+		row = row_input + 1;
+		col = column_input - 1;
+
+		while (!_is_out_of_bound(row, col, board->rows, board->columns) && board->map[row][col] == player){
+			row += 1;
+			col -= 1;
+			count += 1;
+			if(count >= board->config->align_to_win) return player;
+		}
+	}
+
+	return -1;
+}
+
 bool _verify_winner(Board *board) {
     int winner = -1;
-
-    //winner = _verify_winner_diago_right;
-    //if (winner != -1) {
-    //    board->winner = board->players[winner];
-    //    return 1;
-    //}
-
-    //winner = _verify_winner_diago_left;
-    //if (winner != -1) {
-    //    board->winner = board->players[winner];
-    //    return 1;
-    //}
 
     for(int i = 0; i < board->rows; ++i){
         winner = _verif_winner_x(board, i);
@@ -157,6 +181,16 @@ bool _verify_winner(Board *board) {
             return true;
         }
     }
+
+	for (int i = 0; i < board->rows; i++){
+		for (int y = 0; y < board->columns; y++){
+			winner = _verif_winner_diag(board, i, y);
+			if(winner != -1){
+				board->winner = board->players[winner];
+				return true;
+			}
+		}
+	}
 
     return false;
 }

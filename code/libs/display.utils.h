@@ -33,7 +33,7 @@ void _display_player(Player *player){
 }
 
 void _display_winner(Player *winner){
-    wprintf(L"%s%s%s  %s %swon in %d turns !%s\n", CONSOLE_COLORS[6], SPECIALS_CHARS[0], winner->color, winner->name, CONSOLE_COLORS[6], winner->placed_pawns, CONSOLE_COLORS[5]);
+    wprintf(L"%s%s%s  %s %swon in %d turns !%s\n\n\n", CONSOLE_COLORS[6], SPECIALS_CHARS[0], winner->color, winner->name, CONSOLE_COLORS[6], winner->placed_pawns, CONSOLE_COLORS[5]);
 }
 
 void _display_cursor(Board *board){
@@ -50,12 +50,13 @@ void _display_cursor(Board *board){
 }
 
 void _display_board_header(Board *board){
-	if(board->winner->id != -1) {
-        display_winner(board);
+	if(board->winner->name != NULL) {
+        _display_winner(board->winner);
     } else {
-        _display_player(board);
+        _display_player(board->turn_of);
         _display_cursor(board);
     }
+
 	for(short i = 0; i < board->columns; i++){
 		if(i == 0) wprintf(L"╒");
 		else wprintf(L"╤");
