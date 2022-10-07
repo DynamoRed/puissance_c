@@ -3,24 +3,22 @@
 #include <math.h>
 #include <string.h>
 #include <fcntl.h>
-#include <conio.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <wchar.h>
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
+#include <io.h>
+#include <conio.h>
+#include <winsock2.h>
+#else
+#error "Unsupported compiler (Windows only)"
+#endif
+
 #include "libs/miscs.utils.h"
 #include "libs/display.utils.h"
 #include "libs/game.utils.h"
 #include "libs/config.utils.h"
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-#include <io.h>
-#elif __APPLE__
-#include <sys/uio.h>
-#elif __linux__ || __unix__
-#include <sys/io.h>
-#else
-#error "Unknown compiler"
-#endif
 
 
 /*H**********************************************************************
@@ -43,37 +41,45 @@
 
 /*=====================================================*/
 
-int main();
+int main(int argc, char *argv[]);
 bool _get_players_names(Board *board);
+int end(Board *board, Config *config, int failure);
 
 /*=====================================================*/
 
-//int main(int argc, char *argv[])
-int main(){
+int main(int argc, char *argv[]){
+    _setmode(1, 0x00020000);
+
+	unsigned short socket_mode = 0;
+
+	for(int i = 0; i < argc && !socket_mode; i++){
+		if(strcmp(argv[i], "-c") == 0) socket_mode = 1;
+		if(strcmp(argv[i], "-s") == 0) socket_mode = 2;
+	}
+
 	bool game_run = true;
     Config *config = calloc(1, sizeof(Config));
 	Board *board = calloc(1, sizeof(Board));
-
-    _setmode(1, 0x00020000);
+	config->mode = socket_mode;
 
 	if(!get_config(config, "app.config")){
 		wprintf(L"%sInvalid app.config file!%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
-		return EXIT_FAILURE;
+		return end(NULL, config, 1);
 	}
 
 	if(config->rows < 2 || config->columns < 2 || config->align_to_win < 2 || config->player_count < 2){
 		wprintf(L"%sInvalid configuration! (Every field must be at least equal to 2)%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
-		return EXIT_FAILURE;
+		return end(NULL, config, 1);
 	}
 
 	if(config->player_count > 5){
 		wprintf(L"%sYou can play with up to 5 players maximum!%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
-		return EXIT_FAILURE;
+		return end(NULL, config, 1);
 	}
 
 	if(config->rows < config->align_to_win || config->columns < config->align_to_win){
 		wprintf(L"%sInvalid rows or columns values! Your rows and columns must be at least equal to ALIGN_TO_WIN%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
-		return EXIT_FAILURE;
+		return end(NULL, config, 1);
 	}
 
 	board = generate_board(config);
@@ -83,15 +89,40 @@ int main(){
         while(game_run) game_run = run_game(board);
     } else {
 		wprintf(L"%sAn error occured!%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);
-		return EXIT_FAILURE;
+		return end(board, NULL, 1);
 	}
 
-    return EXIT_SUCCESS;
+    return end(board, NULL, 0);
+}
+
+int end(Board *board, Config *config, int failure){
+	if(config != NULL) free(config);
+	if(board != NULL){
+		for(int i = 0; i < board->player_count; i++){
+			free(board->players[i]->name);
+			free(board->players[i]);
+		}
+
+		for(int i = 0; i < board->rows; i++) free(board->map[i]);
+
+		free(board->winner->name);
+		free(board->winner);
+		free(board->turn_of->name);
+		free(board->turn_of);
+		if(config == NULL) free(board->config);
+		free(board);
+	}
+
+	return failure;
 }
 
 bool _get_players_names(Board *board){
 	clear_console();
-	wprintf(L"%s---=== PUISSANCE C ===---%s", CONSOLE_COLORS[4], CONSOLE_COLORS[0]);
+	wchar_t *local = L"Local Multiplayer";
+	wchar_t *host = L"Host";
+	wchar_t *guest = L"Guest";
+
+	wprintf(L"%s---=== PUISSANCE C (%s) ===---%s", CONSOLE_COLORS[4], board->config->mode ? (board->config->mode == 1 ? guest : host) : local, CONSOLE_COLORS[0]);
 	wchar_t *first = L"the first";
 	wchar_t *next = L"next";
 	for(short i = 0; i < board->player_count; i++){

@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -std=c99
 
-LIB =
+LIB = -lws2_32
 
 BIN = ./code/app.c
 

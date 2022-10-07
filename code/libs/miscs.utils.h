@@ -26,6 +26,7 @@ typedef struct {
 	unsigned short columns;
 	unsigned short align_to_win;
 	unsigned short player_count;
+	unsigned short mode;
 } Config;
 
 typedef struct {
