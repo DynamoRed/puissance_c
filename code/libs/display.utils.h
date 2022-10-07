@@ -20,8 +20,13 @@ void _display_cursor(Board *board) {
 }
 
 void display_board(Board *board) {
-    _display_player(board);
-    _display_cursor(board);
+    if(board->winner->name != NULL) {
+        display_winner(board);
+    } else {
+        _display_player(board);
+        _display_cursor(board);
+    }
+
     for (int i = 0; i < board->rows; ++i) {
         int index = 0;
         for (int j = 0; j <= board->columns * 2; ++j) {
