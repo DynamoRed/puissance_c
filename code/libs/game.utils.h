@@ -18,6 +18,9 @@ bool start_game(Board *board);
 Board *generate_board(Config *config);
 bool _move_cursor(Board *board, int move_to);
 bool _put_pawn(Board *board);
+bool _verify_winner(Board *board);
+int _verif_winner_y(Board *board, int column);
+int _verif_winner_x(Board *board, int row);
 
 /*=====================================================*/
 
@@ -72,7 +75,7 @@ Board *generate_board(Config *config){
     board->player_count = config->player_count;
     board->players = calloc(config->player_count+1, sizeof(Player));
 
-    for(int i = 0; i < config->player_count; i++){
+    for(short i = 0; i < config->player_count; i++){
         Player *new_player = calloc(1, sizeof(Player));
         new_player->name = calloc(255, sizeof(wchar_t));
         wcscpy(new_player->color, CONSOLE_COLORS[i]);
@@ -90,6 +93,74 @@ Board *generate_board(Config *config){
     return board;
 }
 
+int _verif_winner_y(Board *board, int column){
+    for(short y = 0; y < board->rows; y++){
+        if(board->map[y][column] != -1){
+            int player = board->map[y][column];
+            int count = 1;
+
+            while (y < board->rows && board->map[y][column] == player){
+                if(count == board->config->align_to_win) return player;
+
+                count++;
+                y++;
+            }
+        }
+    }
+    return -1;
+}
+
+int _verif_winner_x(Board *board, int row){
+    for(int x = 0; x < board->columns; x++){
+        if(board->map[row][x] != -1){
+            int player = board->map[row][x];
+            int count = 1;
+
+            while (x < board->columns && board->map[row][x] == player){
+                if(count == board->config->align_to_win) return player;
+
+                count++;
+                x++;
+            }
+        }
+    }
+    return -1;
+}
+
+bool _verify_winner(Board *board) {
+    int winner = -1;
+
+    //winner = _verify_winner_diago_right;
+    //if (winner != -1) {
+    //    board->winner = board->players[winner];
+    //    return 1;
+    //}
+
+    //winner = _verify_winner_diago_left;
+    //if (winner != -1) {
+    //    board->winner = board->players[winner];
+    //    return 1;
+    //}
+
+    for(int i = 0; i < board->rows; ++i){
+        winner = _verif_winner_x(board, i);
+        if(winner != -1) {
+            board->winner = board->players[winner];
+            return true;
+        }
+    }
+
+    for(int i = 0; i < board->columns; ++i){
+        winner = _verif_winner_y(board, i);
+        if(winner != -1){
+            board->winner = board->players[winner];
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool run_game(Board *board){
     int event = getch();
 
@@ -100,7 +171,13 @@ bool run_game(Board *board){
 			break;
 
 		case 13:
-			if(_put_pawn(board)) display_board(board);
+			if(_put_pawn(board)){
+				if (_verify_winner(board)) {
+					display_board(board);
+					return false;
+				}
+				display_board(board);
+			}
 			break;
 
 		case 27:

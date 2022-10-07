@@ -38,7 +38,7 @@ void _display_winner(Player *winner){
 
 void _display_cursor(Board *board){
     wprintf(L"  ");
-    for(int i = 0 ; i <= board->columns ; i++) {
+    for(short i = 0 ; i <= board->columns ; i++) {
         if(board->selected_column == i) {
             wprintf(L"%s%s%s", board->turn_of->color, SPECIALS_CHARS[1], CONSOLE_COLORS[5]);
             break;
@@ -50,14 +50,17 @@ void _display_cursor(Board *board){
 }
 
 void _display_board_header(Board *board){
-	_display_player(board->turn_of);
-    _display_cursor(board);
-
-	for(int i = 0; i < board->columns; i++){
+	if(board->winner->id != -1) {
+        display_winner(board);
+    } else {
+        _display_player(board);
+        _display_cursor(board);
+    }
+	for(short i = 0; i < board->columns; i++){
 		if(i == 0) wprintf(L"╒");
 		else wprintf(L"╤");
 
-		if(board->map[0][i] != -1) wprintf(L"═══");
+		if(board->map[0][i] != -1 || board->winner->id != -1) wprintf(L"═══");
 		else wprintf(L"   ");
 
 		if(i == board->columns-1) wprintf(L"╕\n");
@@ -65,7 +68,7 @@ void _display_board_header(Board *board){
 }
 
 void _display_board_footer(Board *board){
-	for(int i = 0; i < board->columns; i++){
+	for(short i = 0; i < board->columns; i++){
 		if(i == 0) wprintf(L"╘");
 		else wprintf(L"╧");
 		wprintf(L"═══");
