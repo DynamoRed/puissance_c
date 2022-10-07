@@ -4,8 +4,9 @@
 #include <string.h>
 #include <fcntl.h>
 #include <conio.h>
-#include "libs/game.utils.h"
+#include "libs/miscs.utils.h"
 #include "libs/display.utils.h"
+#include "libs/game.utils.h"
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #include <io.h>
@@ -36,148 +37,22 @@
 *
 *H***********************************************************************/
 
-Board *_generate_board(Config *config){
-	Board *board = malloc(sizeof(Board));
+/*=====================================================*/
 
-	board->config = config;
+int main(int argc, char *argv[]);
+int _get_players_names(Board *board);
 
-	board->columns = board->config->columns;
-	board->rows = board->config->rows;
-	board->map = calloc(board->rows, sizeof(short *));
-	for(short i = 0; i < board->rows; i++){
-		board->map[i] = calloc(board->columns, sizeof(short));
-		for(short y = 0; y < board->columns; y++) board->map[i][y] = -1;
-	}
-	board->selected_column = 0;
-
-	Player *null_player = malloc(sizeof(Player));
-	null_player->name = NULL;
-	wcscpy(null_player->color, CONSOLE_COLORS[4]);
-	null_player->id = -1;
-	null_player->placed_pawns = -1;
-
-    board->player_count = board->player_count;
-    board->players = calloc(board->player_count+1, sizeof(Player));
-
-    for(int i = 0; i < board->player_count; i++){
-        Player *new_player = calloc(1, sizeof(Player));
-        new_player->name = calloc(255, sizeof(wchar_t));
-        wcscpy(new_player->color, CONSOLE_COLORS[i]);
-        new_player->placed_pawns = 0;
-        new_player->id = i;
-        board->players[i] = new_player;
-    }
-
-    board->turn_of = board->players[0];
-    board->winner = calloc(1, sizeof(Player));
-    board->winner = null_player;
-
-	board->players[board->player_count] = null_player;
-
-    return board;
-}
-
-int _get_players_names(Board *board){
-	wprintf(L"\e[1;1H\e[2J");
-	wprintf(L"%s---=== PUISSANCE C ===---%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
-	wchar_t *first = L"first";
-	wchar_t *next = L"next";
-	for(short i = 0; i < board->player_count; i++){
-		wchar_t *name = calloc(255, sizeof(wchar_t));
-
-		short len = 0;
-		do {
-			wprintf(L"\n\n\x2192 Enter %s player name: ", i == 0 ? first : next);
-			wscanf(L"%s", name);
-			len = wcslen(name);
-			if(len < 2) wprintf(L"\n%sIncorrect name! Retry...%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
-		} while(len < 2);
-
-		wcscpy(board->players[i]->name, name);
-		wprintf(L"\e[1;1H\e[2J");
-		fflush(stdin);
-		free(name);
-		wprintf(L"Welcome onboard %s%s %s!", board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[5]);
-	}
-	wprintf(L"\e[1;1H\e[2J");
-	return 1;
-}
-
-int is_moving(int c) {
-    return c == 77 || c == 75;
-}
-
-int is_put_pawn(int c) {
-    return c == 13;
-}
-
-
-void _move_cursor(Board *board, int new_pos) {
-    if(new_pos == 77 && board->selected_column + 1 < board->columns) {
-        board->selected_column += 1;
-    } else if(new_pos == 75 && board->selected_column - 1 >= 0) {
-        board->selected_column -= 1;
-    }
-}
-
-void _put_pawn(Board *board) {
-    int selected_column = board->selected_column;
-    int index = 0;
-
-    while (board->map[index][selected_column] == -1) {
-        if(index == board->rows - 1) {
-            break;
-        }
-        index++;
-    }
-
-    if(index == 0) {
-        return;
-    }
-
-    if(index == board->rows - 1 && board->map[index][selected_column] == -1) {
-        index++;
-    }
-
-    board->map[index - 1][selected_column] = board->turn_of->id;
-
-    if(board->turn_of->id + 1 >= board->player_count) {
-        board->turn_of = board->players[0];
-    } else {
-        board->turn_of = board->players[board->turn_of->id + 1];
-    }
-}
-
-int _start_game(Board *board) {
-    int event;
-
-    event = getch();
-    if(event == 80) return 0;
-
-    if(is_moving(event)) {
-        clear_console();
-        _move_cursor(board, event);
-        display_board(board);
-    }
-
-    if(is_put_pawn(event)) {
-        clear_console();
-        _put_pawn(board);
-        display_board(board);
-    }
-
-
-    return 1;
-}
-
+/*=====================================================*/
 
 int main(int argc, char *argv[]){
+	int game_run = 1;
+    Config *config = calloc(1, sizeof(Config));
+	Board *board = calloc(1, sizeof(Board));
+
     _setmode(_fileno(stdout), 0x00020000);
 
-    // INIT CONFIG
-    Config *config = calloc(1, sizeof(Config));
 	config->rows = 6;
-	config->columns = 1;
+	config->columns = 7;
 	config->align_to_win = 4;
 	config->player_count = 4;
 
@@ -186,20 +61,52 @@ int main(int argc, char *argv[]){
 		return EXIT_FAILURE;
 	}
 
-	Board *board = _generate_board(config);
-	short start_game = 1;
+	board = generate_board(config);
 
     if(_get_players_names(board)){
-        clear_console();
         display_board(board);
-        while (start_game) {
-            start_game = _start_game(board);
-        }
-    }
-	else {
+        while(game_run) game_run = run_game(board);
+    } else {
 		wprintf(L"%sAn error occured!", CONSOLE_COLORS[1]);
 		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
+}
+
+int _get_players_names(Board *board){
+	clear_console();
+	wprintf(L"%s---=== PUISSANCE C ===---%s", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+	wchar_t *first = L"the first";
+	wchar_t *next = L"next";
+	for(short i = 0; i < board->player_count; i++){
+		wchar_t *name = calloc(255, sizeof(wchar_t));
+
+		short correct = 0;
+		do {
+			correct = 1;
+			wprintf(L"\n\n\x2192 Enter %s player name: ", i == 0 ? first : next);
+			wscanf(L"%s", name);
+			int len = wcslen(name);
+			if(len < 2){
+				wprintf(L"\n%sIncorrect name! Retry...%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+				correct = 0;
+			}
+			for(short y = 0; y < board->player_count; y++){
+				if(wcscmp(board->players[y]->name, name) == 0){
+					wprintf(L"\n%sThis name is already taken! Retry...%s\n", CONSOLE_COLORS[0], CONSOLE_COLORS[5]);
+					correct = 0;
+					break;
+				}
+			}
+		} while(!correct);
+
+		wcscpy(board->players[i]->name, name);
+		clear_console();
+		fflush(stdin);
+		free(name);
+		wprintf(L"Welcome onboard %s%s %s!", board->players[i]->color, board->players[i]->name, CONSOLE_COLORS[5]);
+	}
+	clear_console();
+	return 1;
 }
