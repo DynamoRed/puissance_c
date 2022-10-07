@@ -6,6 +6,7 @@
 #include <conio.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <wchar.h>
 #include "libs/miscs.utils.h"
 #include "libs/display.utils.h"
 #include "libs/game.utils.h"
@@ -42,17 +43,18 @@
 
 /*=====================================================*/
 
-int main(int argc, char *argv[]);
+int main();
 bool _get_players_names(Board *board);
 
 /*=====================================================*/
 
-int main(int argc, char *argv[]){
+//int main(int argc, char *argv[])
+int main(){
 	bool game_run = true;
     Config *config = calloc(1, sizeof(Config));
 	Board *board = calloc(1, sizeof(Board));
 
-    _setmode(_fileno(stdout), 0x00020000);
+    _setmode(1, 0x00020000);
 
 	if(!get_config(config, "app.config")){
 		wprintf(L"%sInvalid app.config file!%s", CONSOLE_COLORS[2], CONSOLE_COLORS[0]);

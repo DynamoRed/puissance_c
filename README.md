@@ -6,6 +6,9 @@
 ```
 gcc ./code/app.c -o ./executable/app.exe
 ```
+```
+make
+```
 
 ### Configuration
 
